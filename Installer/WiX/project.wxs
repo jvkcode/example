@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<Product Id="{8D4F075F-CA92-499B-89F1-2372FCE63B35}" 
+	         Name="Simple Version Control System" Language="1033" 
+			 Version="1.0.0" 
+			 Manufacturer="Julia Karastoianova"
+			 UpgradeCode="{FC678B71-F425-46E7-8267-D970813C9A12}" >
+		<Package Description="This installer contains the logic and data required to install Simple Version Control System"
+               Comments="Simple Version Control System MySvcs"
+               Manufacturer="Julia Karastoianova"
+			   InstallerVersion="200" 
+			   Compressed="yes" />
+		<Media Id='1' Cabinet='Product.cab' EmbedCab='yes' />
+		<?define libMySvcsLibs.dll="libMySvcsLibs.dll"?>
+		<?define Vendordir="Julias_MySvcs"?>
+		<?define ApplicationRootDirectory="MySvcs"?>
+			<Directory Id="TARGETDIR" Name="SourceDir">
+				<Directory Id="ProgramFilesFolder" Name="Program Files (x86)">
+					<Directory Id="VENDORDIRECTORY" Name="$(var.Vendordir)" />
+				</Directory>
+			</Directory>
+			<DirectoryRef Id="VENDORDIRECTORY">
+				<Component Id="_all" Guid="{01DC070C-60E3-4009-AF5E-7A56EA573AB7}" KeyPath="yes">
+					<RemoveFolder Id="ProgramFilesFolder" Directory="VENDORDIRECTORY" On="uninstall" />
+				</Component>
+				<Directory Id="APPLICATIONROOTDIRECTORY" Name="$(var.ApplicationRootDirectory)">
+					<Directory Id="BIN" Name="bin">
+						<Component Id="_MySvcs.exe" Guid="{B0FD2202-4199-46BA-B5FA-9904909BC716}" KeyPath="yes">
+							<File Id="_MySvcs.exe" Name="MySvcs.exe" DiskId="1" Source="bin\MySvcs.exe" 
+										BindPath="$(var.MySvcsPATH)\lib;$(var.MySvcsPATH)\bin" />
+								<RegistryKey Id="APPLICATIONDIRECTORY_bin_MySvcs_exe"  
+								             Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\MySvcs.exe"
+								             ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
+									<RegistryValue Type="string" Value="$(var.MySvcsPATH)\bin\MySvcs.exe" />
+									<RegistryValue Type="string" Name="Path"
+								                   Value="$(var.MySvcsPATH)\bin;$(var.MySvcsPATH)\lib" />
+								</RegistryKey>
+								<RegistryKey Root="HKCR" Key="Applications\MySvcs.exe\shell"
+								            ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
+										<RegistryValue Type="string" Value="open"/>
+								</RegistryKey>
+								<RegistryKey Root="HKCR" Key="Applications\MySvcs.exe\shell\open\command"
+								             ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
+								    <RegistryValue Type="string" Value="$(var.MySvcsPATH)\bin\MySvcs.exe help"/>
+								</RegistryKey>
+						</Component>
+					</Directory>
+					<Directory Id="LIB" Name="lib">
+							<Component Id="_libMySvcsLibs.dll" Guid="{A8A148EA-5C3A-4EB1-900D-D58AB39E8F04}" Win64="no" KeyPath="yes">
+								<File Id="_libMySvcsLibs.dll" Name="$(var.libMySvcsLibs.dll)" DiskId="1" Source="lib\libMySvcsLibs.dll" />
+							</Component>
+							<Component Id="_libMySvcsLibs.dll.a" Guid="{F19A17B2-6E44-42FA-8A11-36D6C45D0B7E}" Win64="no">
+								<File Id="_libMySvcsLibs.dll.a" Name="libMySvcsLibs.dll.a" KeyPath="yes" DiskId="1" Source="lib\libMySvcsLibs.dll.a" />
+							</Component>
+							<Component Id="_libMySvcsLibs.dll.def" Guid="{D77ABB5A-06F7-4E4C-BB2D-14CC0262C437}" Win64="no">
+								<File Id="_libMySvcsLibs.dll.def" Name="libMySvcsLibs.dll.def" KeyPath="yes" DiskId="1" Source="lib\libMySvcsLibs.dll.def" />
+							</Component>
+						</Directory>
+				</Directory>
+		<!-- This will overwrite whatever is in Path - cannot figure out how to avoid it -->		
+		<Directory Id="DesktopFolder" Name="Desktop"> 
+        <Component Id="_add_path_to_MySvcs_bin_and_lib" Guid="{91B5A101-B78A-412D-A2F1-D1636121CF38}">	
+            <RegistryKey Root="HKCU" Key="Environment"
+						 ForceCreateOnInstall="no" ForceDeleteOnUninstall="no">
+				<RegistryValue Action="write" Type="expandable" Name="Path" 
+					     Value=";$(var.MySvcsPATH)\lib;$(var.MySvcsPATH)\bin" KeyPath="yes"/>
+				</RegistryKey>
+		</Component>
+		</Directory>
+		</DirectoryRef>
+		<Feature Id="Complete" Title="Simple Version Control System" Level="1">
+			<ComponentRef Id="_all" />
+			<ComponentRef Id="_MySvcs.exe" />
+			<ComponentRef Id="_libMySvcsLibs.dll" />
+			<ComponentRef Id="_libMySvcsLibs.dll.a" />
+			<ComponentRef Id="_libMySvcsLibs.dll.def" />
+			<ComponentRef Id="_add_path_to_MySvcs_bin_and_lib" />
+		</Feature>
+		<Property Id="JULIA" Secure="yes" />
+		<Property Id="ProductNameLoc" Value="Simple Version Control System" />
+		<Upgrade Id="{FC678B71-F425-46E7-8267-D970813C9A12}">
+			<UpgradeVersion Minimum="0.0.0" Maximum="3.99.99" Property="JULIA" IncludeMinimum="yes" />
+        </Upgrade>		
+		<InstallExecuteSequence>
+		    <RemoveExistingProducts Before="InstallInitialize" />
+		</InstallExecuteSequence>
+	<UI>
+		<UIRef Id="WixUI_Minimal" />
+	</UI>
+	<Property Id="WIXUI_MINIMAL" Value="VENDORDIRECTORY" />
+	<Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="To run application from command line"/>
+   </Product>
+</Wix>

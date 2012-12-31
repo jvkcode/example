@@ -1,0 +1,178 @@
+Note: It is for my project that is not finished with WiX yet.
+TODO: for WiX installer
+1) Add COM dll libraries to WiX installer
+2) Add module or manifest file to be able to upgrade libs only
+3) Add config file for my program that will be not overwritten in
+   next installation
+4) Figure out how not delete certan registry on uninstall
+5) Figure out how to set %PATH% using registry without deleting others
+
+What is done:
+
+A package for distributing a simple application.
+------------------------------------------------
+On MS Windows:
+1. a program can be installed with simple install.bat script
+   it is often has problems because of UAC like:
+   http://technet.microsoft.com/en-us/library/ee844140(WS.10).aspx
+2. a program can be installed with .msi file or .exe that has .msi for 
+   this program
+   .msi file can be created using WiX with msdn windows installer database
+
+On Windows 7 I wrote simple progect.wxs XML file and built project.msi as:
+candle @doit.txt
+light @ldoit.txt
+where text files:
+doit.txt: -ext WixUtilExtension -dMySvcsPATH="C:\Program Files (x86)\Julias_MySvcs\MySvcs" project.wxs 
+ldoit.txt: -ext WixUtilExtension -dMySvcsPATH="C:\Program Files (x86)\Julias_MySvcs\MySvcs" project.wxsobj
+To generate GUID I was using simple.cpp c++:
+#define _OLEAUT32_
+
+#include <stdio.h>
+#include <InitGuid.h>
+#include <Unknwn.h>
+
+GUID guid;
+wchar_t* wstrGUID[100];
+char strGUID[100];
+int count, i;
+
+int main (int argc, char* argv[]) {
+  if (argc != 2) {
+    fprintf (stderr, "SYNTAX: UUIDGEN <number-of-GUIDs-to-generate>\n");
+    return 1;
+    }
+  count = atoi (argv[1]);
+  for (i = 0; i < count; i++) {
+    CoCreateGuid (&guid);
+    StringFromCLSID (guid, wstrGUID);
+    WideCharToMultiByte (CP_ACP, 0, *wstrGUID, -1, strGUID, MAX_PATH, NULL, NULL);
+    printf ("%s\n", strGUID);
+    }
+  return 0;
+}
+I built C code binaries on Windows 7 using Code::Block with gcc and g++
+for dll libraries I was using dlltool:
+http://sourceware.org/binutils/docs/binutils/dlltool.html
+
+if run project.msi it does:
+1. install/uninstall C:\Program Files (x86)\Julias_MySvcs\MySvcs:
+bin/MySvcs.exe
+lib/libMySvcsLibs.dll,libMySvcsLibs.dll.a,libMySvcsLibs.dll.def
+2. writes/removes-on-uinstall Window Registry:
+   HKCR\Applications\MySvcs.exe\shell\open\command
+   (Default) C:\Program Files (x86)\Julias_MySvcs\MySvcs\bin\MySvcs.exe help
+   HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\MySvcs.exe:
+   (Default) C:\Program Files (x86)\Julias_MySvcs\MySvcs\bin\MySvcs.exe
+   Path C:\Program Files (x86)\Julias_MySvcs\MySvcs\lib;C:\Program Files (x86)\Julias_MySvcs\MySvcs\bin
+   HKCU\Environment
+   Path C:\Program Files (x86)\Julias_MySvcs\MySvcs\lib;C:\Program Files (x86)\Julias_MySvcs\MySvcs\bin 
+Because my C code library is load-time dynamic linking I had to add /path/lib
+to %PATH%
+NOTE: HKCU\Environment works well after machine reboot BUT:
+1. I could not find documentaion how _not_ overwrite existing "Path"
+2. All other programs on my Windows 7 added they %PATH% in 
+   HKLM\SYSTEM\ControlSet\Session Manager\Environment
+   I suspect for the same reason
+
+I added <Upgrade /> but for the whole product - not as a module for libs only.
+I desided to stop my advanture at this point.
+
+My Comments after all:
+1. I built my first WiX project with Wix Documentation and all google help from ground -0- and thankfull for this opportunity to learn a lot.
+2. WiX documentaion is greate with a lot of blank spots that partually filled with msdn docs including Bing search.
+
+On Linux:
+---------
+1. Debian packaging and apt-get install <your-pkg-name>
+2. RPMs packaging and rpm -i <your-package-name>
+Note: Tools like yum or yast with zypper are built on top of RPM
+
+I built my C code on Ubuntu 64-bit x86_64 using VMWare on my Mac
+1. Installed rpm package as: apt-get install rpm
+2. Wrote MySvcs.spec file;
+3. run rpmbuild -ba MySvcs.spec to create all directory tree as:
+~/rpmbuild/{SPECS,SOURCES,BUILD,SRPMS,RPMS,etc}
+5. copy MySvcs.spec to SPECS directory;
+4. add MySvcs-1.0.0.tar.gz and README.txt to SOURCES dir;
+5. build src.rpm and two binary rpms as:
+   rpmbuild -ba MySvcs.spec > log.MySvcs_build 2>&1
+Note: log file is included as src.rpm - binaries rpm I did not include
+      I did not built dinamic libraries just to simplify things,
+      but created the lib binary rpm to make it posible in the future.
+
+Simple Version Control System.
+------------------------------
+This code I used in all above projects.
+
+I wrote code in C and compiled it with gcc on:
+1. my Mac XCode & tested;
+2. on Windows 7 Code::Block & tested;
+3. on Ubuntu using rpmbuild from spec file & tested;
+To use this program type: <program_name> help:
+Next command can be used:
+  help 
+  init /path/to/repository
+	 - init repository in given path
+  history 
+	- prints revision history
+  commit 
+	- sorry,not implemented use checkin
+  checkin [--all|files]
+	- saves all files or listed back to repository
+	- required username and password
+  checkout [options] /path/to/repository [checkout_dir]
+	optional: -rN checkout revision number
+	optional: -tN checkout tag number
+	- if no option set the lates revision is checked out
+	- if no checkout_dir, default to working_copy
+	- NOTE: program does not accept /path/to/checkout_dir
+  tag  [TAG_LABEL]
+	- if TAG_LABEL is not set, tag history is printed
+
+It works as described with next simplicity:
+1. it does not delete files from repository -
+   if you delete files it does not detect it;
+2. it saves files in repository _not_ as diff but 'as is';
+3. to checkout tag you need to run history (tag) 
+   to get revision number with your tag;
+4. it has hard coded passwd for checkin and tag YOUR_NAME in:
+   /path/to/repository_name/.mysvcs/conf/passwd mysvcs_user:mysvcs_user123
+
+All is listed bellow:
+
+Top directory: Installer_WiX
+
+Simple version control system C code:
+-------------------------------------
+Simple Version Control System C code: Installer_WiX/src
+This code compiled in MySvcs(.exe): Installer_WiX/src/bin/my_svcs_main.c
+Header file for all C code files: Installer_WiX/src/include/my_svcs.h
+Directory C code libraries: Installer_WiX/src/lib
+All bellow listed files compiled in libmysvcs.a or libMySvcsLibs.dll
+Installer_WiX/src/lib/my_svcs_checkinlibs.c
+Installer_WiX/src/lib/my_svcs_checkoutlibs.c
+Installer_WiX/src/lib/my_svcs_cmdlinelibs.c
+Installer_WiX/src/lib/my_svcs_fileslibs.c
+Installer_WiX/src/lib/my_svcs_initrepositorylibs.c
+Installer_WiX/src/lib/my_svcs_utilslibs.c
+
+rpm for linux build/install:
+---------------------------
+Contains files for rpm to build/install on linux: Installer_WiX/SRPMS
+Log file from rpmbuild -ba MySvcs.spec: Installer_WiX/SRPMS/log.MySvcs_build
+Source file to build on linux: Installer_WiX/SRPMS/MySvcs-1.0.0-1test.src.rpm
+
+WiX Installer for Windows 7:
+---------------------------
+Has files related to WiX installer on Windows 7: Installer_WiX/WiX
+Binary to run in console to create simple version control system:
+ Installer_WiX/WiX/bin/MySvcs.exe
+DLL library produced by gcc  dlltool: Installer_WiX/WiX/lib
+Installer_WiX/WiX/lib/libMySvcsLibs.dll
+Installer_WiX/WiX/lib/libMySvcsLibs.dll.a
+Installer_WiX/WiX/lib/libMySvcsLibs.dll.def
+
+Installer based on WiX for Windows 7: Installer_WiX/WiX/project.msi
+XML (WiX) file for .msi : Installer_WiX/WiX/project.wxs
+

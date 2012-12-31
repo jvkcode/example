@@ -1,0 +1,95 @@
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.mwoUWR
++ umask 022
++ cd /home/dev/rpmbuild/BUILD
++ cd /home/dev/rpmbuild/BUILD
++ rm -rf MySvcs-1.0.0
++ /bin/tar -xvvf -
++ /bin/gzip -dc /home/dev/rpmbuild/SOURCES/MySvcs-1.0.0.tar.gz
+drwxrwxr-x dev/dev           0 2012-12-29 18:27 MySvcs-1.0.0/
+-rw-r--r-- dev/dev        3478 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_libcheckin.c
+-rw-r--r-- dev/dev        5088 2012-12-17 12:11 MySvcs-1.0.0/my_svcs.h
+-rw-r--r-- dev/dev        9699 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_main.c
+-rw-r--r-- dev/dev        1665 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_fileslibs.c
+-rw-r--r-- dev/dev       12684 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_utilslibs.c
+-rw-r--r-- dev/dev        1710 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_libcheckout.c
+-rw-r--r-- dev/dev        2717 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_initrepositorylibs.c
+-rw-r--r-- dev/dev        2471 2012-12-17 12:10 MySvcs-1.0.0/my_svcs_cmdlinelibs.c
++ STATUS=0
++ [ 0 -ne 0 ]
++ cd MySvcs-1.0.0
++ /bin/chmod -Rf a+rX,u+w,g-w,o-w .
++ pwd
++ cp /home/dev/rpmbuild/SOURCES/README.txt /home/dev/rpmbuild/BUILD/MySvcs-1.0.0
++ exit 0
+Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.7nO0WT
++ umask 022
++ cd /home/dev/rpmbuild/BUILD
++ cd MySvcs-1.0.0
++ export CFLAGS=-O2 -g  LDFLAGS=-pie -Wl,-z,relro -Wl,-z,now
++ mkdir obj
++ rm -rf bin
++ mkdir bin
++ rm -rf objlib
++ mkdir objlib
++ rm -rf lib
++ mkdir lib
++ lib_files=my_svcs_libcheckin my_svcs_fileslibs my_svcs_utilslibs my_svcs_libcheckout my_svcs_initrepositorylibs my_svcs_cmdlinelibs
++ lib_files_o=
++ gcc -c my_svcs_libcheckin.c -o objlib/my_svcs_libcheckin.o
++ lib_files_o= objlib/my_svcs_libcheckin.o
++ gcc -c my_svcs_fileslibs.c -o objlib/my_svcs_fileslibs.o
++ lib_files_o= objlib/my_svcs_libcheckin.o objlib/my_svcs_fileslibs.o
++ gcc -c my_svcs_utilslibs.c -o objlib/my_svcs_utilslibs.o
++ lib_files_o= objlib/my_svcs_libcheckin.o objlib/my_svcs_fileslibs.o objlib/my_svcs_utilslibs.o
++ gcc -c my_svcs_libcheckout.c -o objlib/my_svcs_libcheckout.o
++ lib_files_o= objlib/my_svcs_libcheckin.o objlib/my_svcs_fileslibs.o objlib/my_svcs_utilslibs.o objlib/my_svcs_libcheckout.o
++ gcc -c my_svcs_initrepositorylibs.c -o objlib/my_svcs_initrepositorylibs.o
++ lib_files_o= objlib/my_svcs_libcheckin.o objlib/my_svcs_fileslibs.o objlib/my_svcs_utilslibs.o objlib/my_svcs_libcheckout.o objlib/my_svcs_initrepositorylibs.o
++ gcc -c my_svcs_cmdlinelibs.c -o objlib/my_svcs_cmdlinelibs.o
++ lib_files_o= objlib/my_svcs_libcheckin.o objlib/my_svcs_fileslibs.o objlib/my_svcs_utilslibs.o objlib/my_svcs_libcheckout.o objlib/my_svcs_initrepositorylibs.o objlib/my_svcs_cmdlinelibs.o
++ ar rcs lib/libmysvcs.a objlib/my_svcs_libcheckin.o objlib/my_svcs_fileslibs.o objlib/my_svcs_utilslibs.o objlib/my_svcs_libcheckout.o objlib/my_svcs_initrepositorylibs.o objlib/my_svcs_cmdlinelibs.o
++ gcc -O2 -g -static my_svcs_main.c -L./lib -lmysvcs -o bin/MySvcs
+my_svcs_main.c: In function 'svcs_checkin':
+my_svcs_main.c:267:14: warning: ignoring return value of 'scanf', declared with attribute warn_unused_result [-Wunused-result]
++ exit 0
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.dbLHQi
++ umask 022
++ cd /home/dev/rpmbuild/BUILD
++ cd MySvcs-1.0.0
++ rm -rf /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64
++ install -p -d -m 755 /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/bin
++ install -p -d -m 755 /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/lib64
++ install -p -d -m 750 /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/etc/MySvcs
++ cp bin/MySvcs /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/bin
++ cp lib/libmysvcs.a /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/lib64
++ /usr/lib/rpm/brp-compress
++ /usr/lib/rpm/brp-strip /usr/bin/strip
++ /usr/lib/rpm/brp-strip-static-archive /usr/bin/strip
++ /usr/lib/rpm/brp-strip-comment-note /usr/bin/strip /usr/bin/objdump
+Processing files: MySvcs-1.0.0-1test.x86_64
+Executing(%doc): /bin/sh -e /var/tmp/rpm-tmp.yIas6H
++ umask 022
++ cd /home/dev/rpmbuild/BUILD
++ cd MySvcs-1.0.0
++ DOCDIR=/home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/share/doc/MySvcs-1.0.0
++ export DOCDIR
++ /bin/mkdir -p /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/share/doc/MySvcs-1.0.0
++ cp -pr README.txt /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64/usr/share/doc/MySvcs-1.0.0
++ exit 0
+unknown, 0: Warning: using regular magic file `/etc/magic'
+Provides: MySvcs = 1.0.0-1test MySvcs(x86-64) = 1.0.0-1test
+Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+Processing files: MySvcs-libs-1.0.0-1test.x86_64
+unknown, 0: Warning: using regular magic file `/etc/magic'
+Provides: MySvcs-libs = 1.0.0-1test MySvcs-libs(x86-64) = 1.0.0-1test
+Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64
+Wrote: /home/dev/rpmbuild/SRPMS/MySvcs-1.0.0-1test.src.rpm
+Wrote: /home/dev/rpmbuild/RPMS/x86_64/MySvcs-1.0.0-1test.x86_64.rpm
+Wrote: /home/dev/rpmbuild/RPMS/x86_64/MySvcs-libs-1.0.0-1test.x86_64.rpm
+Executing(%clean): /bin/sh -e /var/tmp/rpm-tmp.xYbo6n
++ umask 022
++ cd /home/dev/rpmbuild/BUILD
++ cd MySvcs-1.0.0
++ rm -rf /home/dev/rpmbuild/BUILDROOT/MySvcs-1.0.0-1test.x86_64
++ exit 0

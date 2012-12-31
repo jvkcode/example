@@ -1,0 +1,1 @@
+-ext WixUtilExtension -dMySvcsPATH="C:\Program Files (x86)\Julias_MySvcs\MySvcs" project.wxs 
