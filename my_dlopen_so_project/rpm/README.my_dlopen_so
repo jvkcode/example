@@ -1,0 +1,12 @@
+To built own rpm do from top dir:
+1. tar -czf my_dlopen_so-1.0.0.tar.gz my_dlopen_so-1.0.0
+2. place my_dlopen_so-1.0.0.tar.gz and README.my_dlopen_so in
+   /your/path/to/SOURCES
+3. place my_dlopen_so.spec to
+   /your/path/to/SPECS
+4. cd /your/path/to/SPECS
+
+IMPORTANT: tested only on Ubuntu x86_64
+
+5. rpmbuild -ba my_dlopen_so.spec
+6. rpmbuild --target=i386 -ba my_dlopen_so.spec

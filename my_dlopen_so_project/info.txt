@@ -1,0 +1,168 @@
+
+============================ WHAT I DID =========================
+1) Used next tools: GNU autoconf, aclocal, automake, libtool, gcc
+2) Wrote C code; configure.ac; Makefile.am
+
+C code:
+-------
+Has two files: 
+1. my_dlopen_so_main.c ( executable == my_dlopen_so )
+2. my_dlopen_so_libs.c (loadable modile == libmy_dlopen_so.[a|so*])
+
+configure.ac
+------------
+Has my m4 macro: julia_set_it.m4 ( sets -DJULIA=[32|64] on compile time)
+location: my_dlopen_so-1.0.0/build-aux/julia_set_it.m4
+in configure.ac: JULIA_SET_IT
+
+in Makefiles
+-----------
+$ grep JULIA Ma*
+Makefile:AM_CFLAGS = -I$(srcdir)/src -DJULIA=64
+Makefile.am:AM_CFLAGS = -I$(srcdir)/src -DJULIA=@TARGET_BITS@
+Makefile.in:AM_CFLAGS = -I$(srcdir)/src -DJULIA=@TARGET_BITS@
+
+in my_dlopen_so_libs.c
+-----------------------
+#ifdef JULIA
+#define PROGRAM_BITS JULIA
+#else
+#error
+#endif
+
+NOTES:
+1. I did all work and tests on x86_64 Ubuntu 12.10 on VMWare Fusion
+2. package my_dlopen_so can be built from tarball file and source rpm file
+3. source rpm is set to detect if build is running on x86_64 host
+   and  adds i386 options if building for i386 arch from command line:
+   rpmbuilt --target=i386 -ba my_dlopen_so.spec
+4. if build for i386 from tarball ./configure  should run with next options:
+   --host=x86_64-linux-gnu --target=i386-linux-gnu --build=i386-linux-gnu
+   Code added to configure.ac to set -m32 on gcc.
+5. I built 32 and 64 bits binary and tested it.
+6. libtool gives tool to create own library .so version adding
+   -version-info to Makefile.am:
+   libmy_dlopen_so_la_LDFLAGS = @LDFLAGS@ -version-info $(MY_DLOPEN_SO_CURRENT):$(MY_DLOPEN_SO_REVISION):$(MY_DLOPEN_SO_AGE) -module
+7. -module option tells libtool that .so will be loaded with ldopen
+8. In C code I wrote constractor/destractor that load/unload library
+   before/after main starts
+9. Instructions how to compile/run/test code are bellow.
+
+TODO:
+1. FIXME: Global variables in main C code module
+2. FIXME: add PATH search code to constractor function
+
+============================ RPM BUILD ==========================
+$ rpm -i my_dlopen_so-1.0.0-demo.src.rpm
+## cd to /path/SPECS
+## to build on x86_64 host for i386 target do:
+$ rpmbuild --target=i386 -ba my_dlopen_so.spec
+[output]
+Wrote: /home/dev/rpmbuild/SRPMS/my_dlopen_so-1.0.0-demo.src.rpm
+Wrote: /home/dev/rpmbuild/RPMS/i386/my_dlopen_so-1.0.0-demo.i386.rpm
+Wrote: /home/dev/rpmbuild/RPMS/i386/my_dlopen_so-devel-1.0.0-demo.i386.rpm
+[output]
+## install binary into /tmp/ direcory
+## NOTE: I use --nodeps because I run rpm on Ubuntu
+## rpm cannot verify dependencies because it does not have database
+## of all packages that are installed on my machine
+$rm -rf /tmp/32; mkdir /tmp/32
+$sudo rpm -i --nodeps --root=/tmp/32 ../RPMS/i386/my_dlopen_so-1.0.0-demo.i386.rpm 
+[output maybe]
+
+## TEST
+dev@ubuntu:~/rpmbuild/SPECS$ /tmp/32/usr/bin/i386-linux-gnu-my_dlopen_so 
+Constructor: done its' work!
+my_dlopen_libs_info: Running binaries are 32 bits
+my_dlopen_libs_info: Shoud I keep/check libs version here?
+Destructor.
+
+## to build x86_64 binary on x86_64 build host do
+$ rpmbuild -ba my_dlopen_so.spec
+[output]
+$ rm -rf /tmp/64; mkdir /tmp/64
+$ sudo rpm -i --nodeps --root=/tmp/64 ../RPMS/x86_64/my_dlopen_so-1.0.0-demo.x86_64.rpm 
+[output]
+
+## TEST
+dev@ubuntu:~/rpmbuild/SPECS$ /tmp/64/usr/bin/my_dlopen_so 
+Constructor: done its' work!
+my_dlopen_libs_info: Running binaries are 64 bits
+my_dlopen_libs_info: Shoud I keep/check libs version here?
+Destructor.
+
+===================== RUN FROM SOURCE ==============================
+$ tar -xzf my_dlopen_so-1.0.0.tar.gz
+$ cd  my_dlopen_so-1.0.0
+$ ls
+AUTHORS    ChangeLog     configure     COPYING  Makefile.am  NEWS    src
+build-aux  configure.ac  config.status INSTALL  Makefile.in  README
+$ autoreconf -I build-aux -v
+[output]
+$ ls
+aclocal.m4      build-aux      configure     INSTALL      NEWS
+AUTHORS         ChangeLog      configure.ac  Makefile.am  README
+autom4te.cache  config.status  COPYING       Makefile.in  src
+
+## Optional - run configure from another directory
+$ mkdir ../mybuild
+$ cd ../mybuild; ../my_dlopen_so-1.0.0/configure
+## end Optional
+$./configure
+[output]
+$make
+[output]
+$ls
+aclocal.m4      config.log     INSTALL             Makefile.in           NEWS
+AUTHORS         config.status  libmy_dlopen_so.la  my_dlopen_so          README
+autom4te.cache  configure      libtool             my_dlopen_so_libs.lo  src
+build-aux       configure.ac   Makefile            my_dlopen_so_libs.o
+ChangeLog       COPYING        Makefile.am         my_dlopen_so_main.o
+$ ls .libs/
+libmy_dlopen_so.a    libmy_dlopen_so.so         my_dlopen_so_libs.o
+libmy_dlopen_so.la   libmy_dlopen_so.so.4
+libmy_dlopen_so.lai  libmy_dlopen_so.so.4.1.15
+
+## TEST
+# Because executable my_dlopen_so and library not in the same direcory:
+$ ./my_dlopen_so 
+Constructor: Error on ./libmy_dlopen_so.so.4: cannot open shared object file: No such file or directory
+Library must be in the same directory as executable
+main: Fails to load shared library
+Destructor.
+
+$ make install DESTDIR=/tmp/64
+[output]
+$ mv /tmp/64/usr/local/lib/* /tmp/64/usr/local/bin/.
+$ find /tmp/64
+/tmp/64/usr/local/bin/libmy_dlopen_so.so
+/tmp/64/usr/local/bin/libmy_dlopen_so.so.4.1.15
+/tmp/64/usr/local/bin/libmy_dlopen_so.la
+/tmp/64/usr/local/bin/my_dlopen_so
+
+## TEST after make install
+$ file /tmp/64/usr/local/bin/my_dlopen_so 
+/tmp/64/usr/local/bin/my_dlopen_so: ELF 64-bit LSB executable ...
+$ /tmp/64/usr/local/bin/my_dlopen_so 
+Constructor: done its' work!
+my_dlopen_libs_info: Running binaries are 64 bits
+my_dlopen_libs_info: Shoud I keep/check libs version here?
+Destructor.
+
+## build for i386 on x86_64 host
+# NOTE if no -linux-gnu libtool does not create .so libraries
+$ ./configure --build=i386-linux-gnu --host=x86_64-linux-gnu --target=i386-linux-gnu
+[output]
+$make
+[output]
+$ file my_dlopen_so
+my_dlopen_so: ELF 32-bit LSB executable, ...
+
+## TEST without make install
+$ mv my_dlopen_so .libs/.
+$ .libs/my_dlopen_so 
+Constructor: done its' work!
+my_dlopen_libs_info: Running binaries are 32 bits
+my_dlopen_libs_info: Shoud I keep/check libs version here?
+Destructor.
+
